@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package DoQuang;
 
 import java.io.*;
@@ -27,20 +23,45 @@ class ChatMessage implements Serializable {
 class ChatServer {
     private int port;
     private Set<ClientHandler> clients = ConcurrentHashMap.newKeySet();
+    private ServerSocket serverSocket;
+    private volatile boolean running = true;
     
     public ChatServer(int port) {
         this.port = port;
     }
     
     public void start() {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
+        try {
+            serverSocket = new ServerSocket(port);
             System.out.println("Server is running on port " + port);
-            while (true) {
-                Socket socket = serverSocket.accept();
-                ClientHandler clientHandler = new ClientHandler(socket, this);
-                clients.add(clientHandler);
-                new Thread(clientHandler).start();
+            while (running) {
+                try {
+                    Socket socket = serverSocket.accept();
+                    ClientHandler clientHandler = new ClientHandler(socket, this);
+                    clients.add(clientHandler);
+                    new Thread(clientHandler).start();
+                } catch (IOException e) {
+                    if (!running) break; // Dừng nếu server đã bị tắt
+                }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            stop();
+        }
+    }
+    
+    public void stop() {
+        running = false;
+        try {
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
+            }
+            for (ClientHandler client : clients) {
+                client.close();
+            }
+            clients.clear();
+            System.out.println("Server stopped.");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -71,19 +92,27 @@ class ChatServer {
             }
         }
         
+        public void close() {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        
         @Override
         public void run() {
             try (ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
                 out = new ObjectOutputStream(socket.getOutputStream());
-                while (true) {
+                while (server.running) {
                     ChatMessage message = (ChatMessage) in.readObject();
                     server.broadcast(message);
                 }
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             } finally {
-                try { socket.close(); } catch (IOException e) { }
                 server.clients.remove(this);
+                close();
             }
         }
     }
@@ -124,7 +153,7 @@ class ChatClient {
                 }
             }).start();
         } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace();           
         }
     }
     
@@ -137,4 +166,3 @@ class ChatClient {
         }
     }
 }
-
