@@ -5,7 +5,7 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-// Định nghĩa tin nhắn chat
+
 class ChatMessage implements Serializable {
     private String sender;
     private String message;
@@ -19,16 +19,20 @@ class ChatMessage implements Serializable {
     public String getMessage() { return message; }
 }
 
-// Server xử lý nhiều client
 class ChatServer {
     private int port;
     private Set<ClientHandler> clients = ConcurrentHashMap.newKeySet();
     private ServerSocket serverSocket;
     private volatile boolean running = true;
-    private int connectedClients = 0; // Biến đếm số client đang kết nối
+    private int connectedClients = 0; 
+    private List<ServerChatListener> listeners = new ArrayList<>();
 
     public ChatServer(int port) {
         this.port = port;
+    }
+    
+    public void addServerChatListener(ServerChatListener listener) {
+        listeners.add(listener);
     }
     
     public void start() {
@@ -40,11 +44,11 @@ class ChatServer {
                     Socket socket = serverSocket.accept();
                     ClientHandler clientHandler = new ClientHandler(socket, this);
                     clients.add(clientHandler);
-                    connectedClients++; // Tăng số đếm khi client kết nối
+                    connectedClients++; 
                     System.out.println("New client connected. Total clients: " + connectedClients);                 
                     new Thread(clientHandler).start();                   
                 } catch (IOException e) {
-                    if (!running) break; // Dừng nếu server đã bị tắt
+                    if (!running) break; 
                 }
             }
         } catch (IOException e) {
@@ -55,6 +59,7 @@ class ChatServer {
     }
     
     public void stop() {
+        broadcast(new ChatMessage("Server", "Closing Server..."));
         running = false;
         try {
             if (serverSocket != null && !serverSocket.isClosed()) {
@@ -64,7 +69,7 @@ class ChatServer {
                 client.close();
             }
             clients.clear();
-            connectedClients = 0; // Đặt lại số đếm khi server dừng
+            connectedClients = 0; 
             System.out.println("Server stopped. Total clients: " + connectedClients);
         } catch (IOException e) {
             e.printStackTrace();
@@ -75,9 +80,12 @@ class ChatServer {
         for (ClientHandler client : clients) {
             client.sendMessage(message);
         }
+        for (ServerChatListener listener : listeners) {
+            listener.onMessageReceived(message);
+        }
     }
     
-    // Thêm phương thức để lấy số client đang kết nối
+   
     public int getConnectedClients() {
         return connectedClients;
     }
@@ -124,7 +132,7 @@ class ChatServer {
                 //e.printStackTrace();
             } finally {
                 server.clients.remove(this);
-                server.connectedClients--; // Giảm số đếm khi client ngắt kết nối
+                server.connectedClients--; 
                 System.out.println("Client disconnected. Total clients: " + server.connectedClients);
                 close();
             }
@@ -132,12 +140,14 @@ class ChatServer {
     }
 }
 
-// Interface để client nhận tin nhắn từ server
+
 interface ChatListener {
     void onMessageReceived(ChatMessage message);
 }
+interface ServerChatListener {
+    void onMessageReceived(ChatMessage message);
+}
 
-// Client kết nối đến server
 class ChatClient {
     private String host;
     private int port;
@@ -165,20 +175,20 @@ class ChatClient {
                         listener.onMessageReceived(message);
                     }
                 } catch (EOFException | SocketException e) {
-                    // Bỏ qua lỗi khi socket đã đóng
+                    
                 } catch (IOException | ClassNotFoundException e) {
                     if (running) e.printStackTrace();
                 } finally {
-                    if (running) disconnect(); // Chỉ gọi nếu chưa chủ động ngắt
+                    if (running) disconnect(); 
                 }
             }).start();
         } catch (IOException e) {
             e.printStackTrace();           
         }
     }
-    
-    public void disconnect() {
-        running = false; // Dừng vòng lặp nhận tin nhắn
+    //ham ngat ket noi
+    public void disconnect() {        
+        running = false; 
         try {
             if (out != null) {
                 out.close();

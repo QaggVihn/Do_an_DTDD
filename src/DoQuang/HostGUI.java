@@ -10,11 +10,12 @@ import java.net.UnknownHostException;
 import javax.swing.JOptionPane;
 import java.util.Timer;
 import java.util.TimerTask;
+import javax.swing.SwingUtilities;
 /**
  *
  * @author quang
  */
-public class HostGUI extends javax.swing.JFrame {
+public class HostGUI extends javax.swing.JFrame implements ServerChatListener {
 
     
     ChatServer server;
@@ -26,6 +27,7 @@ public class HostGUI extends javax.swing.JFrame {
         initComponents();
         this.setLocationRelativeTo(null);       
         this.btnStop.setVisible(false);
+        this.pnlChat.setVisible(false);
         this.setVisible(true);
         this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         lblStatus.setText("Khong hoat dong");
@@ -66,6 +68,9 @@ public class HostGUI extends javax.swing.JFrame {
         txtPort = new javax.swing.JTextField();
         btnStart = new javax.swing.JButton();
         btnStop = new javax.swing.JButton();
+        pnlChat = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        txtaChatHistory = new javax.swing.JTextArea();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("HOST");
@@ -78,13 +83,13 @@ public class HostGUI extends javax.swing.JFrame {
         lblStatus.setText("khong hoat dong");
 
         jLabel3.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        jLabel3.setText("So ket noi");
+        jLabel3.setText("So ket noi:");
 
         lblIPaddress.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblIPaddress.setText("none");
 
         jLabel4.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        jLabel4.setText("Dia chi IP");
+        jLabel4.setText("Dia chi IP:");
 
         lblConns.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblConns.setText("0");
@@ -109,7 +114,7 @@ public class HostGUI extends javax.swing.JFrame {
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(39, 39, 39)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(lblStatus))
@@ -120,8 +125,7 @@ public class HostGUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(lblConns)
-                    .addComponent(jLabel3))
-                .addGap(31, 31, 31))
+                    .addComponent(jLabel3)))
         );
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
@@ -174,7 +178,28 @@ public class HostGUI extends javax.swing.JFrame {
                 .addComponent(btnStart, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(btnStop, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(17, Short.MAX_VALUE))
+                .addGap(14, 14, 14))
+        );
+
+        txtaChatHistory.setColumns(20);
+        txtaChatHistory.setRows(5);
+        jScrollPane1.setViewportView(txtaChatHistory);
+
+        javax.swing.GroupLayout pnlChatLayout = new javax.swing.GroupLayout(pnlChat);
+        pnlChat.setLayout(pnlChatLayout);
+        pnlChatLayout.setHorizontalGroup(
+            pnlChatLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnlChatLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane1)
+                .addContainerGap())
+        );
+        pnlChatLayout.setVerticalGroup(
+            pnlChatLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnlChatLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 285, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -184,6 +209,7 @@ public class HostGUI extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(pnlChat, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
@@ -192,10 +218,12 @@ public class HostGUI extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(pnlChat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
@@ -222,9 +250,11 @@ public class HostGUI extends javax.swing.JFrame {
         int port = Integer.valueOf(txtPort.getText());        
         server = new ChatServer(port);      
         serverThread = new Thread(() -> server.start());
+        server.addServerChatListener(this);
         serverThread.start();
         btnStart.setEnabled(false);
         btnStop.setVisible(true);
+        pnlChat.setVisible(true);
         lblStatus.setText("Dang hoat dong");
         lblIPaddress.setText(CurIPAdress().getHostAddress());
         AppLoop();
@@ -236,6 +266,7 @@ public class HostGUI extends javax.swing.JFrame {
             serverThread.interrupt();
             btnStart.setEnabled(true);
             btnStop.setVisible(false);
+            pnlChat.setVisible(false);
             lblStatus.setText("Khong hoat dong");
             lblIPaddress.setText("none");
             timer.cancel();
@@ -252,6 +283,13 @@ public class HostGUI extends javax.swing.JFrame {
             }
         }, 0, 1000); // Chạy mỗi 1 giây (1000ms)
     
+    }
+    
+    @Override
+    public void onMessageReceived(ChatMessage message) {
+        SwingUtilities.invokeLater(() -> {
+            txtaChatHistory.append(message.getSender() + ": " + message.getMessage() + "\n");
+        });
     }
     /**
      * @param args the command line arguments
@@ -300,9 +338,12 @@ public class HostGUI extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblConns;
     private javax.swing.JLabel lblIPaddress;
     private javax.swing.JLabel lblStatus;
+    private javax.swing.JPanel pnlChat;
     private javax.swing.JTextField txtPort;
+    private javax.swing.JTextArea txtaChatHistory;
     // End of variables declaration//GEN-END:variables
 }
